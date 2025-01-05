@@ -203,7 +203,20 @@ class Parser:
     def parse_program(self):
         node = Node('Program')
         while self.position < len(self.tokens):
+            node.add_child(self.parse_headers())
             node.add_child(self.parse_main())
+        return node
+
+    def parse_headers(self):
+        token = self.current_token()
+        node = Node('Headers')
+        while token.token == 'P1':
+            thistokenlist = ['P1', 'O21', 'ID', 'O19', 'O28']
+            if self.checkTokensList(thistokenlist):
+                node.add_child(Node('ID', tokens[self.position - 3].lexeme))
+            else:
+                raise Exception('ошибка объявления заголовка')
+            token = self.current_token()
         return node
 
     def parse_main(self):
@@ -334,15 +347,6 @@ class CodeGenerator:
 
     def get_code(self):
         return "\n".join(self.code)
-
-#     def prog(self, spp, indent):
-#         self.show(indent, 'prog', spp)
-#         indent = indent+' '
-#         thistokenlist = ['P1', 'O21', 'ID', 'O19', 'O28']
-#         res, spp = self.checkTokensList(spp, thistokenlist)
-#         if res:
-#             return self.mainFunc(spp, indent)
-#         return False, spp
 
 
 def preproc(pretokens):
