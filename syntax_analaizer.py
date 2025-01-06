@@ -203,13 +203,6 @@ class Parser:
                         self.consume('D3')
                         node = Node('Cin')
                         node.add_child(Node('Identifirer', token.lexeme))
-                        # print(node.parent.node_type)
-                        # print(node.parent.parent.node_type)
-                        # typeNode = find_node(root, token.lexeme)
-                        # if typeNode:
-                        #     node = Node('Cin')
-                        #     node.add_child(Node('Identifirer', token.lexeme))
-                        #     node.add_child(Node('Type', typeNode.node_type.value))
                         return node
         raise Exception('Ошибка ввода')
 
