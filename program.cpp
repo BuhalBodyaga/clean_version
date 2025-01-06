@@ -1,12 +1,14 @@
 #include <iostream>
-#include <cmath>
+#include <String>
+
+using namespace std;
 
 int main(){
-    int a = 15;
+    int a;
     float b = 15;
-    cout<<a;
     int bb;
     string str = "strg";
+    cin>>a;
     cout<<a;
-
+    bb=4;
 }
