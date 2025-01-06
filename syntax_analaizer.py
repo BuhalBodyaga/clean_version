@@ -25,27 +25,43 @@ class Parser:
         self.position = 0
 
     def current_token(self):
+        '''Возвращает текущий токен'''
         return self.tokens[self.position] if self.position < len(self.tokens) else None
 
     def consume(self, expected_type):
+        '''Поглощает токен, то есть сдвигает позицию self.position
+        если текущий токен соответствует expected_type'''
         if self.position < len(self.tokens) and self.tokens[self.position].token == expected_type:
             self.position += 1
         else:
             raise Exception(f'Expected token type {expected_type}')
 
     def checkTokensList(self, tokenlist):
-        position = self.position # переменная position вводится для того, чтобы не изменять реальную позицию пока мы не убедимся, что последовательность токенов соответствует tokenlist
+        '''Поглощает последовательность токенов, если она
+        соответствует tokenlist'''
+        # переменная position вводится для того,
+        # чтобы не изменять реальную позицию пока мы
+        # не убедимся, что последовательность токенов
+        # соответствует tokenlist
+        position = self.position
         for i in tokenlist:
             if self.tokens[position].token != i:
                 return False
-            if position < len(self.tokens):  # если мы не в конце программы, то все ок, смещаемся дальше
+            # если мы не в конце программы,
+            # то все ок, смещаемся дальше
+            if position < len(self.tokens):
                 position += 1
             else:
                 return False
-        self.position = position  # цикл подошел к концу, теперь можно поменять реальную позицию на нашу
+        # цикл подошел к концу, теперь можно поменять реальную позицию на нашу
+        self.position = position
         return True
 
     def parse_program(self):
+        '''Парсит (добавляет узлы в дерево) прямые потомки Program, то есть
+        заголовки, пространство имен, главную функцию, также тут должны быть
+        обычные функции (они объявляются на одном уровне с main), классы,
+        константы и тд'''
         node = Node('Program')
         while self.position < len(self.tokens):
             node.add_child(self.parse_headers())
@@ -58,6 +74,7 @@ class Parser:
         return node
 
     def parse_namespace(self):
+        '''Парсит пространство имен (пока только std)'''
         node = Node('Namespaces')
         thistokenlist = ['K11', 'K13', 'K26', 'D3']
         if self.checkTokensList(thistokenlist):
@@ -67,6 +84,7 @@ class Parser:
             raise Exception('ошибка пространства имен')
 
     def parse_headers(self):
+        '''Парсит заголовки (любые)'''
         token = self.current_token()
         node = Node('Headers')
         while token.token == 'P1':
@@ -79,6 +97,7 @@ class Parser:
         return node
 
     def parse_main(self):
+        '''Парсит главную функцию'''
         thistokenlist = ['K17', 'K32', 'D6', 'D7', 'D4']
         if self.checkTokensList(thistokenlist):
             node = Node('MainFunction')
@@ -93,6 +112,7 @@ class Parser:
             raise Exception('ошибка объявления главной функции')
 
     def parse_body(self):
+        '''Парсит тело функции (любой)'''
         node = Node('Body')
         node.add_child(self.parse_code_block())
         while self.position < len(self.tokens) - 1:
@@ -100,6 +120,8 @@ class Parser:
         return node
 
     def parse_code_block(self):
+        '''Парсит инструкции внутри тела функции. Пока
+        что только объявление переменных, ввод/вывод, присваивание'''
         node = Node('Instruction')
         token = self.current_token()
         if token.token in ['K17', 'K18', 'K22']:
@@ -116,6 +138,7 @@ class Parser:
         return node
 
     def parse_declaration(self):
+        '''Парсит объявление переменных'''
         token = self.current_token()
         if token.token in ['K17', 'K18', 'K22']:
             var_node = Node('VariableDeclaration')
@@ -136,6 +159,7 @@ class Parser:
         raise Exception('Unexpected token')
 
     def parse_cout(self):
+        '''Парсит вывод'''
         if self.tokens[self.position].token == 'K24':
             self.consume('K24')
             if self.tokens[self.position].token == 'O25':
@@ -150,6 +174,7 @@ class Parser:
         raise Exception('Ошибка вывода')
 
     def parse_cin(self):
+        '''Парсит ввод'''
         if self.tokens[self.position].token == 'K25':
             self.consume('K25')
             if self.tokens[self.position].token == 'O26':
@@ -164,6 +189,8 @@ class Parser:
         raise Exception('Ошибка ввода')
 
     def parse_identifier(self):
+        '''Парсит идентификтор (слегка бесполезная функция,
+        от нее можно отказаться)'''
         token = self.current_token()
         if token.token == 'ID':
             id_node = Node('Identifier', token.lexeme)
@@ -172,6 +199,9 @@ class Parser:
         raise Exception('Expected identifier')
 
     def parse_assignment(self):
+        '''Парсит присваивание, пытаюсь запихнуть сюда
+        и присваивание математических/логических выражений.
+        пока что присвоить можно только значение или идентификатор'''
         node = Node('Assignment')
         node.add_child(self.parse_identifier())
         token = self.current_token()
@@ -193,6 +223,7 @@ class Parser:
             raise Exception('ошибка выражения1')
 
     def parse_expression(self):
+        '''Парсит значение переменной (тоже слегка бесполезная функция)'''
         token = self.current_token()
         if token.token == 'N1':
             value_node = Node('Integer', token.lexeme)
@@ -210,7 +241,7 @@ class Parser:
             raise Exception('Expected expression')
 
     def print_syntax_tree(self, node, level=0):
-        """ Рекурсивно выводит синтаксическое дерево. """
+        '''Рекурсивно выводит синтаксическое дерево.'''
         if node is None:
             return
         print("\t" * level + f"{node.node_type}: {node.value if node.value is not None else ''}")
