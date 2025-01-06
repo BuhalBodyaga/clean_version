@@ -4,7 +4,8 @@ from syntax_analaizer import Parser, Token, Node
 from generator import CodeGenerator
 
 
-def preproc(pretokens):
+def preproc(pretokens) -> List[Token]:
+    '''удаляет пробелы и переносы строки в токенах'''
     tokens: List[Token] = []
     for i in range(len(pretokens)):
         if pretokens[i].token != 'D10':
@@ -12,61 +13,53 @@ def preproc(pretokens):
             # где-то они должны быть обязательно. с пробелами такой проблемы
             # нет, потому что если лексемы распознались правильно, значит
             # пробелы были там где надо
-            if not (pretokens[i].token == 'O28' and pretokens[i - 1].token != 'O19'):
+            if not (pretokens[i].token == 'O28'
+                    and pretokens[i - 1].token != 'O19'):
                 tokens.append(pretokens[i])
     return tokens
 
 
-def find_node(root, type):
-    found_nodes = []  # Список для хранения найденных узлов
-
-    # Проверяем, совпадает ли значение текущего узла с искомым
+def find_type(root, type):
+    found_nodes = []
     if root.node_type == type:
         found_nodes.append(root)
-
-    # Рекурсивно ищем в дочерних узлах
     for child in root.children:
-        found_nodes.extend(find_node(child, type))  # Объединяем результаты
-
-    # Возвращаем список найденных узлов
+        found_nodes.extend(find_type(child, type))
     return found_nodes
 
 
-def find_node2(root, value):
-    # Проверяем, совпадает ли значение текущего узла с искомым
+def find_value(root, value):
     if root.value == value:
         return root
-
-    # Рекурсивно ищем в дочерних узлах
     for child in root.children:
-        result = find_node2(child, value)
+        result = find_value(child, value)
         if result is not None:
             return result
-
-    # Если узел не найден, возвращаем None
     return None
 
 
 def preproc_cin(program_node):
-    finds = find_node(program_node, 'Cin')
-    # print(finds)
+    '''в джаве нет обычного чтения, там нужно явно указывать
+    тип данных, который мы читаем. поэтому тут я написала функцию,
+    которая после построения дерева ищет в нем все узлы Cin и затем
+    ищет, в каком узле объявляется переменная, которую нужно считать.
+    после этого в узел Cin добавляется потомок с типом этой переменной'''
+    finds = find_type(program_node, 'Cin')
     if finds:
         for find in finds:
-            # print(find.node_type)
             id = find.children[0].value
             node = find.parent.parent
-            find2 = find_node2(node, id)
+            find2 = find_value(node, id)
             if find2:
-                # print(find2.node_type)
                 type = find2.parent.children[0].value
                 find.add_child(Node('Type', type))
             else:
-                raise Exception('ошибка2')
-    else:
-        raise Exception('ошибка1')
+                raise Exception(f'нельзя считать необъявленную переменную{id}')
 
 
 if __name__ == '__main__':
+
+    # считываем исходную программу
     buffer = Buffer()
     Analyzer = LexicalAnalyzer()
 
@@ -85,23 +78,34 @@ if __name__ == '__main__':
         row += lin
         column += col
 
+    # создаем массив токенов
     for i in range(len(token)):
         fullToken = Token(token[i], lexeme[i], row[i], column[i])
         fullTokens.append(fullToken)
 
+    # удаляем пробелы и переносы строки
     tokens = preproc(fullTokens)
 
+    # печать токенов
     for i in range(len(tokens)):
         print(tokens[i])
 
+    # создаем парсер
     parser = Parser(tokens)
-    program_node = parser.parse_program()  # Получаем дерево
+
+    # строим дерево
+    program_node = parser.parse_program()
+
+    # выводим дерево
     parser.print_syntax_tree(program_node)
 
+    # обрабатываем все cin, чтобы добавить к ним тип данных
     preproc_cin(program_node)
 
+    # еще раз печатаем дерево для проверки синов
     parser.print_syntax_tree(program_node)
 
+    # генерируем джава-код
     generator = CodeGenerator()
     generator.generate(program_node)
     java_code = generator.get_code()

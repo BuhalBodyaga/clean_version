@@ -26,37 +26,33 @@ class CodeGenerator:
             for child in node.children:
                 self.generate(child)
         elif node.node_type == 'VariableDeclaration':
-            var_type = node.children[0].value  # Тип переменной
-            identifier = node.children[1].value  # Имя переменной
-            # Генерация выражения
+            var_type = node.children[0].value
+            identifier = node.children[1].value
             if len(node.children) > 2:
                 self.code.append(f'{var_type} {identifier} = {node.children[2].value};')
             else:
                 self.code.append(f'{var_type} {identifier};')
         elif node.node_type == 'Cout':
             self.code.append(f'System.out.println({node.value});')
+        # сложные махинации с Cin
         elif node.node_type == 'Cin':
-            type = node.children[1].value
+            value = node.children[1].value
             if 'import java.util.Scanner;' not in self.code:
                 self.code.insert(0, 'import java.util.Scanner;')
             if 'Scanner scanner = new Scanner(System.in);' not in self.code:
                 self.code.append('Scanner scanner = new Scanner(System.in);')
-            if type == 'string':
+            if value == 'string':
                 type = 'Line'
-            elif type == 'int':
+            elif value == 'int':
                 type = 'Int'
-            elif type == 'bool':
+            elif value == 'bool':
                 type = 'Boolean'
-            elif type == 'float':
+            elif value == 'float':
                 type = 'Double'
             else:
-                print('ошибка типа данных при вводе')
+                raise Exception(f'ошибка типа данных считываемой переменной{node.children[0].value}')
             self.code.append(f'{node.children[0].value} = scanner.next{type}();')
 
-        elif node.node_type == 'Identifier':
-            return node.value
-        elif node.node_type == 'Integer':
-            return node.value
         else:
             raise Exception(f'Unknown node type: {node.node_type}')
 
