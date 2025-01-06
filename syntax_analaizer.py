@@ -10,13 +10,30 @@ class Token:
 
 
 class Node:
-    def __init__(self, node_type, value=None):
+    def __init__(self, node_type, value=None, parent=None):
         self.node_type = node_type
         self.value = value
+        self.parent = parent
         self.children = []
 
     def add_child(self, child):
+        child.parent = self
         self.children.append(child)
+
+
+def find_node(root, value):
+    # Проверяем, совпадает ли значение текущего узла с искомым
+    if root.value == value:
+        return root
+
+    # Рекурсивно ищем в дочерних узлах
+    for child in root.children:
+        result = find_node(child, value)
+        if result is not None:
+            return result
+
+    # Если узел не найден, возвращаем None
+    return None
 
 
 class Parser:
@@ -184,7 +201,15 @@ class Parser:
                     self.consume(token.token)
                     if self.tokens[self.position].token == 'D3':
                         self.consume('D3')
-                        node = Node('Cin', token.lexeme)
+                        node = Node('Cin')
+                        node.add_child(Node('Identifirer', token.lexeme))
+                        # print(node.parent.node_type)
+                        # print(node.parent.parent.node_type)
+                        # typeNode = find_node(root, token.lexeme)
+                        # if typeNode:
+                        #     node = Node('Cin')
+                        #     node.add_child(Node('Identifirer', token.lexeme))
+                        #     node.add_child(Node('Type', typeNode.node_type.value))
                         return node
         raise Exception('Ошибка ввода')
 

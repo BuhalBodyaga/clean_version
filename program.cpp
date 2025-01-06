@@ -6,9 +6,9 @@ using namespace std;
 int main(){
     int a;
     float b = 15;
-    int bb;
-    string str = "strg";
+    float bb;
+    cout<<b;
     cin>>a;
-    cout<<a;
-    bb=4;
+    string str = "strg";
+    cin>>bb;
 }
