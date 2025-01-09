@@ -1,14 +1,24 @@
 #include <iostream>
-#include <String>
-
 using namespace std;
 
-int main(){
+class MyClass {
+    int x;
+    float y = 20;
+};
+
+int main() {
     int a;
     float b = 15;
     float bb;
-    cout<<b;
-    cin>>a;
+    b++;
+    b = a + 5 * 6 / 3;
+    MyClass obj;
+    while (a + 15 == 15) {
+        cout << b;
+        cout << "Pamagiti";
+    }
+    cout << b;
+    cin >> a;
     string str = "strg";
-    cin>>bb;
+    cin >> bb;
 }
