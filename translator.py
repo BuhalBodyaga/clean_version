@@ -97,7 +97,7 @@ if __name__ == '__main__':
     program_node = parser.parse_program()
 
     # выводим дерево
-    parser.print_syntax_tree(program_node)
+    # parser.print_syntax_tree(program_node)
 
     # обрабатываем все cin, чтобы добавить к ним тип данных
     preproc_cin(program_node)
