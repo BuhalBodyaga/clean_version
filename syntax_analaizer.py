@@ -156,7 +156,8 @@ class Parser:
             node.add_child(self.parse_class_declaration())
         elif token.token == 'K4':
             node.add_child(self.parse_while())
-
+        elif token.token == 'K6':
+            node.add_child(self.parse_if())
         else:
             print('exeption', token.token, token.row, token.column, self.position)
             raise Exception('ошибка в блоке кода')
@@ -408,6 +409,67 @@ class Parser:
             return value_node
         else:
             raise Exception('Expected expression')
+
+    def parse_if(self):
+        '''Парсит конструкцию if с возможной веткой else'''
+        node = Node('If')
+        token = self.current_token()
+
+        if token.token == 'K6':  # "if"
+            self.consume('K6')
+            condition_node = Node('Condition')
+            token = self.current_token()
+
+            if token.token == 'D6':  # "("
+                self.consume('D6')
+                condition_node.add_child(self.parse_expression())
+                token = self.current_token()
+
+                while token.token != 'D7':  # ")"
+                    if token.token in ['O1', 'O4', 'O7', 'O11', 'O9', 'O24']:
+                        condition_node.add_child(Node('Operator', token.lexeme))
+                        self.consume(token.token)
+                        condition_node.add_child(self.parse_expression())
+                    token = self.current_token()
+
+                if token.token == 'D7':  # ")"
+                    self.consume('D7')
+                    node.add_child(condition_node)
+
+                    if self.current_token().token == 'D4':  # "{"
+                        self.consume('D4')
+                        body_node = Node('Body')
+
+                        while self.current_token().token != 'D5':  # "}"
+                            body_node.add_child(self.parse_code_block())
+
+                        self.consume('D5')  # Закрывающая скобка "}"
+                        node.add_child(body_node)
+
+                        # Проверка на наличие ветки else
+                        if self.current_token().token == 'K7':  # "else"
+                            self.consume('K7')
+                            else_node = Node('Else')
+
+                            if self.current_token().token == 'D4':  # "{"
+                                self.consume('D4')
+
+                                while self.current_token().token != 'D5':  # "}"
+                                    else_node.add_child(self.parse_code_block())
+
+                                self.consume('D5')  # Закрывающая скобка "}"
+                                node.add_child(else_node)
+                            else:
+                                raise Exception('Expected "{" after else')
+                        return node
+                    else:
+                        raise Exception('Expected "{" after if condition')
+                else:
+                    raise Exception('Expected ")" after if condition')
+            else:
+                raise Exception('Expected "(" after if')
+        else:
+            raise Exception('Expected "if" keyword')
 
     def parse_while(self):
         '''Парсит цикл while'''

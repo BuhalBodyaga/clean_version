@@ -17,6 +17,11 @@ int main() {
         cout << b;
         cout << "Pamagiti";
     }
+    if (a + 15 == 15) {
+        cout << b;
+    } else {
+        cout << "Error";
+    }
     cout << b;
     cin >> a;
     string str = "strg";

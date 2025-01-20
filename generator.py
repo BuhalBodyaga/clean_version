@@ -25,6 +25,19 @@ class CodeGenerator:
                     for sub_child in child.children:
                         self.generate(sub_child)
                     self.code.append('}')
+        elif node.node_type == 'If':
+            for child in node.children:
+                if child.node_type == 'Condition':
+                    self.code.append(f'if ({" ".join([sub_child.value for sub_child in child.children])})' + '{')
+                if child.node_type == 'Body':
+                    for sub_child in child.children:
+                        self.generate(sub_child)
+                    self.code.append('}')
+                if child.node_type == 'Else':  # Обработка ветки else
+                    self.code.append('else {')
+                    for sub_child in child.children:
+                        self.generate(sub_child)
+                    self.code.append('}')
         elif node.node_type == 'Body':
             for child in node.children:
                 self.generate(child)
